@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AIM Screener — Rules-based investing for India & USA stocks</title>
+<meta name="description" content="An educational tool that applies the classic AIM rebalancing formula to your portfolio. India (NSE) and USA markets. ₹299/month, 7-day free trial.">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icons/icon-192.png">
+<meta name="theme-color" content="#0B3D2E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ledger:#0B3D2E; --ledger-deep:#072A20; --paper:#F2EFE6; --paper-2:#E9E4D6;
+  --brass:#E8B54D; --buy:#1E7F4F; --sell:#C4453C; --ink:#1B2420; --muted:#5B6A62;
+  --mono:'IBM Plex Mono',monospace; --serif:'Instrument Serif',serif; --sans:'Public Sans',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.6}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+a{color:inherit}
+.wrap{max-width:980px;margin:0 auto;padding:0 20px}
+
+/* NAV */
+nav{background:var(--ledger);color:var(--paper);position:sticky;top:0;z-index:10}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:60px}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-size:22px;letter-spacing:.02em}
+.logo .dia{width:16px;height:16px;background:var(--brass);transform:rotate(45deg);flex:none}
+nav a.cta{background:var(--brass);color:var(--ledger-deep);text-decoration:none;font-weight:700;font-size:14px;padding:9px 18px;border-radius:3px}
+
+/* HERO */
+.hero{background:var(--ledger);color:var(--paper);padding:64px 0 0;overflow:hidden}
+.hero h1{font-family:var(--serif);font-weight:400;font-size:clamp(34px,6vw,58px);line-height:1.12;max-width:640px}
+.hero h1 em{color:var(--brass);font-style:italic}
+.hero p.sub{margin-top:18px;max-width:560px;font-size:17px;color:#CBD8CF}
+.hero .btns{margin-top:28px;display:flex;gap:12px;flex-wrap:wrap}
+.btn{display:inline-block;text-decoration:none;font-weight:700;font-size:15px;padding:14px 26px;border-radius:3px}
+.btn.gold{background:var(--brass);color:var(--ledger-deep)}
+.btn.ghost{border:1px solid #3C5A4D;color:var(--paper)}
+.hero .price-line{margin-top:14px;font-family:var(--mono);font-size:13px;color:#9DB4A6}
+
+/* SIGNATURE: control band */
+.band-wrap{margin:56px 0 0;background:var(--ledger-deep);border-top:1px solid #1C4A3A;padding:26px 0 30px}
+.band-label{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8FA89A;margin-bottom:14px}
+.band{position:relative;height:110px}
+.band .zone{position:absolute;left:0;right:0;top:34px;height:42px;background:rgba(232,181,77,.10);border-top:1px dashed rgba(232,181,77,.5);border-bottom:1px dashed rgba(232,181,77,.5)}
+.band .control{position:absolute;left:0;right:0;top:55px;height:1px;background:var(--brass)}
+.band .tag{position:absolute;font-family:var(--mono);font-size:10px;letter-spacing:.1em}
+.band .tag.c{right:0;top:40px;color:var(--brass)}
+.band .tag.b{left:0;bottom:-4px;color:#6FBF8E}
+.band .tag.s{left:0;top:-4px;color:#E08A82}
+.band .dot{position:absolute;width:12px;height:12px;background:var(--paper);transform:rotate(45deg);top:49px;animation:drift 7s ease-in-out infinite}
+@keyframes drift{
+  0%{left:6%;top:49px}18%{left:22%;top:12px}30%{left:34%;top:20px}
+  45%{left:52%;top:84px}60%{left:66%;top:74px}78%{left:84%;top:24px}100%{left:96%;top:49px}
+}
+@media (prefers-reduced-motion: reduce){.band .dot{animation:none;left:52%}}
+
+/* SECTIONS */
+section{padding:64px 0}
+h2{font-family:var(--serif);font-weight:400;font-size:clamp(26px,4vw,38px);margin-bottom:8px}
+.lede{color:var(--muted);max-width:600px;margin-bottom:36px}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1px;background:var(--paper-2);border:1px solid var(--paper-2)}
+.step{background:var(--paper);padding:26px 22px}
+.step .k{font-family:var(--mono);font-size:12px;color:var(--brass);background:var(--ledger);display:inline-block;padding:3px 8px;margin-bottom:14px}
+.step h3{font-size:17px;margin-bottom:8px}
+.step p{font-size:14.5px;color:var(--muted)}
+
+.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:28px}
+.feat h3{font-size:16px;display:flex;gap:10px;align-items:baseline}
+.feat h3::before{content:"";width:10px;height:10px;background:var(--brass);transform:rotate(45deg);flex:none;position:relative;top:0}
+.feat p{font-size:14.5px;color:var(--muted);margin-top:6px;padding-left:20px}
+
+/* PRICING */
+.pricing{background:var(--ledger);color:var(--paper)}
+.pricecard{max-width:420px;margin:0 auto;background:var(--ledger-deep);border:1px solid #1C4A3A;padding:34px 30px;text-align:center}
+.pricecard .amt{font-family:var(--mono);font-size:52px;font-weight:600;color:var(--brass)}
+.pricecard .amt span{font-size:16px;color:#9DB4A6;font-weight:400}
+.pricecard ul{list-style:none;margin:22px 0;text-align:left}
+.pricecard li{padding:9px 0;border-bottom:1px solid #164237;font-size:14.5px;color:#CBD8CF}
+.pricecard li::before{content:"— ";color:var(--brass)}
+.pricecard .trial{font-family:var(--mono);font-size:12px;color:#9DB4A6;margin-top:12px}
+
+/* DISCLAIMER */
+.legal{background:var(--paper-2);padding:46px 0}
+.legal h2{font-size:22px}
+.legal p{font-size:13.5px;color:var(--muted);max-width:760px;margin-top:10px}
+footer{background:var(--ledger-deep);color:#8FA89A;padding:28px 0;font-size:13px}
+footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <div class="logo"><span class="dia"></span>AIM Screener</div>
+  <a class="cta" href="/app.html">Sign in / Start free</a>
+</div></nav>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>Take the emotion out of the market. <em>Follow the formula.</em></h1>
+    <p class="sub">AIM Screener applies the classic Automatic Investment Management formula — published by Robert Lichello in 1977 — to your own portfolio. It shows you, mechanically, what the model calculates for every stock you hold. India (NSE) and USA markets.</p>
+    <div class="btns">
+      <a class="btn gold" href="/app.html">Start 7-day free trial</a>
+      <a class="btn ghost" href="#how">How it works</a>
+    </div>
+    <div class="price-line mono">₹299/month after trial · cancel anytime · no card needed for trial</div>
+  </div>
+  <div class="band-wrap"><div class="wrap">
+    <div class="band-label">The AIM idea — one picture</div>
+    <div class="band">
+      <div class="tag s">MODEL LEANS: REDUCE</div>
+      <div class="zone"></div>
+      <div class="control"></div>
+      <div class="tag c">CONTROL VALUE</div>
+      <div class="dot"></div>
+      <div class="tag b">MODEL LEANS: ACCUMULATE</div>
+    </div>
+  </div></div>
+</header>
+
+<section id="how"><div class="wrap">
+  <h2>How it works</h2>
+  <p class="lede">No predictions, no tips, no gurus. AIM is pure arithmetic: when a stock drifts far enough from its control value, the formula computes a rebalancing quantity. You study the output and make your own decision.</p>
+  <div class="steps">
+    <div class="step"><span class="k mono">STEP 1</span><h3>Enter your portfolio</h3><p>Add your holdings — quantity and average price — for Indian and US stocks. Set your cash pool, SAFE band and trigger. Your data syncs securely to your account.</p></div>
+    <div class="step"><span class="k mono">STEP 2</span><h3>Run the AIM analysis</h3><p>Live prices are fetched and the Lichello formula runs on every holding: portfolio value vs control value, SAFE zone, trigger filter, profit-check on the sell side.</p></div>
+    <div class="step"><span class="k mono">STEP 3</span><h3>Study, learn, decide</h3><p>See exactly what the model computes and why — every output comes with its reasoning. Backtest AIM against buy-and-hold on any stock before you trust it.</p></div>
+  </div>
+</div></section>
+
+<section style="padding-top:0"><div class="wrap">
+  <h2>What's inside</h2>
+  <p class="lede">Everything from the original AIM system, rebuilt for Indian and US retail investors on mobile.</p>
+  <div class="features">
+    <div class="feat"><h3>India + USA in one app</h3><p>NSE stocks in ₹ and US stocks in $, each with its own portfolio, cash pool and settings.</p></div>
+    <div class="feat"><h3>AIM candidate screener</h3><p>Scans Nifty large-caps and major US stocks for AIM-friendly setups — low in the 52-week range with healthy volatility — and ranks them by score.</p></div>
+    <div class="feat"><h3>Backtesting</h3><p>Run AIM vs buy-and-hold on 2 years of history for any stock and see which would have done better, before risking anything.</p></div>
+    <div class="feat"><h3>Reasoned output</h3><p>No black box. Every HOLD, every quantity, comes with the exact rule that produced it.</p></div>
+    <div class="feat"><h3>Works like an app</h3><p>Install to your phone's home screen from the browser — iPhone and Android — with your data synced across devices.</p></div>
+    <div class="feat"><h3>Learn the method</h3><p>A plain-language guide to the AIM formula, SAFE bands, portfolio control and the trade-offs, so you understand what you're using.</p></div>
+  </div>
+</div></section>
+
+<section class="pricing"><div class="wrap">
+  <h2 style="text-align:center">Simple pricing</h2>
+  <p class="lede" style="text-align:center;margin:8px auto 36px;color:#9DB4A6">One plan. Everything included.</p>
+  <div class="pricecard">
+    <div class="amt mono">₹299<span>/month</span></div>
+    <ul>
+      <li>India (NSE) + USA markets</li>
+      <li>Unlimited holdings & AIM analyses</li>
+      <li>Screener + backtesting</li>
+      <li>Cloud sync across devices</li>
+      <li>Cancel anytime</li>
+    </ul>
+    <a class="btn gold" href="/app.html" style="display:block">Start 7-day free trial</a>
+    <div class="trial mono">No payment details needed to start the trial</div>
+  </div>
+</div></section>
+
+<section class="legal"><div class="wrap">
+  <h2>Important — please read</h2>
+  <p><strong>AIM Screener is an educational and analytical tool only.</strong> It is not investment advice, a recommendation, or a solicitation to buy or sell any security. The operator of this service is <strong>not registered with SEBI</strong> as an Investment Adviser or Research Analyst, and is not registered with the SEC. All outputs are mechanical calculations of a published formula (R. Lichello, "How to Make $1,000,000 in the Stock Market Automatically", 1977) applied to data you enter.</p>
+  <p>Markets involve risk, including loss of capital. Past performance — including backtests — does not guarantee future results. Price data is sourced from public feeds, may be delayed or inaccurate, and should be verified with your broker. You are solely responsible for your investment decisions. Consult a SEBI-registered adviser before investing.</p>
+</div></section>
+
+<footer><div class="wrap">
+  <div>© 2026 AIM Screener</div>
+  <div class="mono">support: rk@onamagarbathi.com</div>
+</div></footer>
+
+<script>
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js");
+</script>
+</body>
+</html>

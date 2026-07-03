@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AIM Screener</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icons/icon-192.png">
+<meta name="theme-color" content="#0B3D2E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ledger:#0B3D2E; --ledger-deep:#072A20; --paper:#F2EFE6; --paper-2:#E9E4D6; --card:#FCFBF7;
+  --brass:#E8B54D; --brass-deep:#B8862B; --buy:#1E7F4F; --sell:#C4453C; --ink:#1B2420; --muted:#5B6A62;
+  --mono:'IBM Plex Mono',monospace; --serif:'Instrument Serif',serif; --sans:'Public Sans',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.5;padding-bottom:80px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.hidden{display:none!important}
+.wrap{max-width:720px;margin:0 auto;padding:0 14px}
+
+/* topbar */
+.topbar{background:var(--ledger);color:var(--paper);position:sticky;top:0;z-index:20}
+.topbar .wrap{display:flex;align-items:center;justify-content:space-between;height:54px}
+.logo{display:flex;align-items:center;gap:8px;font-family:var(--serif);font-size:19px}
+.logo .dia{width:13px;height:13px;background:var(--brass);transform:rotate(45deg)}
+.mkt{display:flex;background:var(--ledger-deep);border-radius:4px;overflow:hidden}
+.mkt button{background:none;border:none;color:#9DB4A6;font-family:var(--mono);font-size:12px;font-weight:600;padding:8px 14px;cursor:pointer}
+.mkt button.on{background:var(--brass);color:var(--ledger-deep)}
+
+/* tabs bottom nav */
+.tabs{position:fixed;bottom:0;left:0;right:0;background:var(--ledger);display:flex;z-index:20;padding-bottom:env(safe-area-inset-bottom)}
+.tabs button{flex:1;background:none;border:none;color:#9DB4A6;font-size:10.5px;font-family:var(--sans);font-weight:600;padding:9px 2px 8px;cursor:pointer;letter-spacing:.02em}
+.tabs button .ic{display:block;font-size:18px;margin-bottom:2px}
+.tabs button.on{color:var(--brass)}
+
+/* cards & elements */
+.page{padding:16px 0}
+.card{background:var(--card);border:1px solid var(--paper-2);border-radius:6px;padding:16px;margin-bottom:12px}
+h2{font-family:var(--serif);font-weight:400;font-size:24px;margin:6px 0 12px}
+h3{font-size:15px;margin-bottom:10px}
+.row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;gap:10px}
+.lbl{color:var(--muted);font-size:13.5px}
+.val{font-family:var(--mono);font-weight:600;font-size:14px}
+.green{color:var(--buy)} .red{color:var(--sell)} .gold{color:var(--brass-deep)} .blue{color:#2A5D8F}
+.muted{color:var(--muted);font-size:12.5px;margin-top:8px}
+button.act{width:100%;background:var(--ledger);color:var(--brass);border:none;border-radius:5px;font-weight:700;font-size:15px;padding:14px;cursor:pointer;margin-top:8px;font-family:var(--sans)}
+button.sec{background:var(--paper-2);color:var(--ink)}
+button.small{width:auto;padding:8px 14px;font-size:13px;margin-top:0}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:5px;font-weight:600}
+input,select{width:100%;padding:12px;border:1px solid var(--paper-2);border-radius:5px;font-size:16px;background:#fff;font-family:var(--sans)}
+.sig{font-family:var(--mono);font-size:12px;font-weight:600;padding:4px 10px;border-radius:3px}
+.sig.buy{background:#E2F2E9;color:var(--buy)} .sig.sell{background:#F8E5E3;color:var(--sell)} .sig.hold{background:var(--paper-2);color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;color:var(--muted);font-weight:600;padding:6px 4px;border-bottom:1px solid var(--paper-2);font-family:var(--mono);font-size:10.5px;letter-spacing:.06em}
+td{padding:7px 4px;border-bottom:1px solid var(--paper-2)}
+td .mono{font-size:12.5px}
+.status{background:var(--paper-2);border-radius:5px;padding:11px 14px;font-size:13px;color:var(--muted);margin-bottom:12px}
+.pill{display:inline-block;font-family:var(--mono);font-size:11px;padding:3px 9px;border-radius:20px;font-weight:600}
+.pill.tr{background:#FDF3DC;color:var(--brass-deep)} .pill.ok{background:#E2F2E9;color:var(--buy)} .pill.bad{background:#F8E5E3;color:var(--sell)}
+.disc{font-size:11.5px;color:var(--muted);border-top:1px dashed var(--paper-2);margin-top:12px;padding-top:10px}
+.del{background:none;border:none;color:var(--sell);font-size:16px;cursor:pointer;padding:4px}
+
+/* auth & paywall */
+.gate{max-width:400px;margin:40px auto;padding:0 18px}
+.gate .logo-big{display:flex;align-items:center;gap:10px;justify-content:center;font-family:var(--serif);font-size:26px;margin-bottom:22px}
+.gate .logo-big .dia{width:16px;height:16px;background:var(--brass);transform:rotate(45deg)}
+.gate .toggle{text-align:center;font-size:13.5px;color:var(--muted);margin-top:14px}
+.gate .toggle a{color:var(--brass-deep);font-weight:600;cursor:pointer}
+.err{background:#F8E5E3;color:var(--sell);border-radius:5px;padding:10px 12px;font-size:13px;margin-bottom:12px}
+.ok-msg{background:#E2F2E9;color:var(--buy);border-radius:5px;padding:10px 12px;font-size:13px;margin-bottom:12px}
+</style>
+</head>
+<body>
+
+<div id="v-loading" class="gate"><div class="logo-big"><span class="dia"></span>AIM Screener</div><div class="status">Loading…</div></div>
+
+<!-- AUTH -->
+<div id="v-auth" class="gate hidden">
+  <div class="logo-big"><span class="dia"></span>AIM Screener</div>
+  <div class="card">
+    <div id="auth-err" class="err hidden"></div>
+    <div id="auth-ok" class="ok-msg hidden"></div>
+    <div class="field"><label>Email</label><input id="au-email" type="email" autocomplete="email" placeholder="you@example.com"></div>
+    <div class="field"><label>Password</label><input id="au-pass" type="password" autocomplete="current-password" placeholder="Minimum 6 characters"></div>
+    <button class="act" id="au-btn" onclick="doAuth()">Sign in</button>
+    <div class="toggle" id="au-toggle"></div>
+    <div class="toggle" id="au-forgot"><a onclick="doReset()">Forgot password?</a></div>
+  </div>
+  <div class="muted" style="text-align:center">New accounts get a 7-day free trial. No card needed.</div>
+</div>
+
+<!-- PAYWALL -->
+<div id="v-paywall" class="gate hidden">
+  <div class="logo-big"><span class="dia"></span>AIM Screener</div>
+  <div class="card" style="text-align:center">
+    <h2 id="pw-title">Your free trial has ended</h2>
+    <div class="mono" style="font-size:40px;font-weight:600;color:var(--brass-deep);margin:10px 0">₹299<span style="font-size:15px;color:var(--muted)">/month</span></div>
+    <div class="muted" style="margin-bottom:14px">India + USA markets · unlimited analyses · screener · backtesting · cancel anytime</div>
+    <div id="pw-err" class="err hidden"></div>
+    <button class="act" id="pw-btn" onclick="subscribe()">Subscribe with Razorpay</button>
+    <div class="muted">UPI, cards and netbanking accepted. Renews monthly, cancel anytime.</div>
+    <button class="act sec" onclick="logout()" style="margin-top:14px">Sign out</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="v-app" class="hidden">
+  <div class="topbar"><div class="wrap">
+    <div class="logo"><span class="dia"></span>AIM</div>
+    <div class="mkt">
+      <button id="mkt-india" class="on" onclick="setMarket('india')">🇮🇳 INDIA</button>
+      <button id="mkt-usa" onclick="setMarket('usa')">🇺🇸 USA</button>
+    </div>
+  </div></div>
+
+  <div class="wrap">
+
+  <!-- PORTFOLIO -->
+  <div class="page" id="pg-portfolio">
+    <h2>Portfolio</h2>
+    <div class="card">
+      <div class="row"><span class="lbl">Holdings value</span><span class="val" id="pf-value">—</span></div>
+      <div class="row"><span class="lbl">Invested</span><span class="val" id="pf-invested">—</span></div>
+      <div class="row"><span class="lbl">P&L</span><span class="val" id="pf-pnl">—</span></div>
+      <div class="row"><span class="lbl">Cash reserve (AIM pool)</span><span class="val blue" id="pf-cash">—</span></div>
+      <button class="act sec small" onclick="refreshPrices()">↻ Refresh prices</button>
+      <span class="muted" id="pf-status"></span>
+    </div>
+    <div id="holdings-list"></div>
+    <div class="card">
+      <h3>Add holding</h3>
+      <div class="field"><label>Symbol <span id="sym-hint" class="mono"></span></label><input id="add-sym" placeholder="e.g. RELIANCE" autocapitalize="characters"></div>
+      <div class="field"><label>Quantity</label><input id="add-qty" type="number" inputmode="numeric"></div>
+      <div class="field"><label>Average buy price</label><input id="add-avg" type="number" inputmode="decimal"></div>
+      <button class="act" onclick="addHolding()">Add to portfolio</button>
+    </div>
+    <div class="card">
+      <h3>Cash reserve</h3>
+      <div class="field"><label>Single AIM cash pool (shared across all stocks)</label><input id="cash-input" type="number" inputmode="numeric"></div>
+      <button class="act sec" onclick="saveCash()">Save cash reserve</button>
+    </div>
+  </div>
+
+  <!-- ANALYSIS -->
+  <div class="page hidden" id="pg-analysis">
+    <h2>AIM Analysis</h2>
+    <div class="status">AIM rules in force: single cash pool · reduce only above cost · trigger filter to avoid overtrading</div>
+    <button class="act" onclick="runAnalysis()">◈ Run AIM analysis</button>
+    <div id="analysis-list" style="margin-top:12px"></div>
+    <div class="card">
+      <h3>Backtest — AIM vs Buy & Hold</h3>
+      <div class="field"><label>Symbol</label><input id="bt-sym" placeholder="e.g. TATAMOTORS" autocapitalize="characters"></div>
+      <div class="field"><label>Starting amount</label><input id="bt-amt" type="number" value="100000" inputmode="numeric"></div>
+      <button class="act sec" onclick="runBacktest()">Run 2-year backtest</button>
+      <div id="bt-result"></div>
+    </div>
+  </div>
+
+  <!-- SCREENER -->
+  <div class="page hidden" id="pg-screener">
+    <h2>Screener</h2>
+    <div class="status">Scans for AIM-friendly setups — low in the 52-week range with healthy volatility. Higher score = better AIM candidate. This is a study list, not a recommendation.</div>
+    <button class="act" onclick="runScreener()">◈ Scan <span id="scr-count"></span> stocks</button>
+    <button class="act sec" onclick="SCR_CANCEL=true">Stop scan</button>
+    <div id="screener-results" style="margin-top:12px"></div>
+  </div>
+
+  <!-- LEARN -->
+  <div class="page hidden" id="pg-learn">
+    <h2>Learn AIM</h2>
+    <div class="card">
+      <h3>What is AIM?</h3>
+      <p style="font-size:14px">AIM (Automatic Investment Management) is a mechanical rebalancing formula published by Robert Lichello in 1977. The core idea: keep a <strong>Portfolio Control</strong> value for each stock. When the market value falls well below control, the formula computes an accumulation amount; when it rises well above, it computes a reduction amount. Money moves between the stock and a cash reserve — buying weakness, trimming strength, without predictions.</p>
+    </div>
+    <div class="card">
+      <h3>The pieces</h3>
+      <div class="row"><span class="lbl">Portfolio Control</span><span class="val">Anchor value per stock</span></div>
+      <div class="row"><span class="lbl">SAFE band</span><span class="val">Dead zone (default 10%)</span></div>
+      <div class="row"><span class="lbl">Trigger</span><span class="val">Minimum size filter (default 5%)</span></div>
+      <div class="row"><span class="lbl">Cash pool</span><span class="val">Shared reserve for accumulation</span></div>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:10px">This app adds two safety corrections to the original formula: a single shared cash pool across all stocks, and reductions are only computed when price is above your average cost.</p>
+    </div>
+    <div class="card">
+      <h3>When AIM struggles</h3>
+      <p style="font-size:14px">AIM tends to shine on volatile, sideways stocks. In strong one-way uptrends, buy-and-hold usually wins — AIM trades some upside for steadiness. Always backtest before trusting the method on a stock.</p>
+    </div>
+    <div class="card">
+      <h3>Important disclaimer</h3>
+      <p style="font-size:13px;color:var(--muted)">AIM Screener is an educational tool. Nothing in this app is investment advice or a recommendation. We are not SEBI or SEC registered. All outputs are mechanical calculations of a published formula applied to data you entered. Prices come from public feeds and may be delayed. Markets involve risk of loss. Consult a SEBI-registered adviser before investing.</p>
+    </div>
+  </div>
+
+  <!-- ACCOUNT -->
+  <div class="page hidden" id="pg-account">
+    <h2>Account</h2>
+    <div class="card">
+      <div class="row"><span class="lbl">Email</span><span class="val" id="ac-email" style="font-size:12.5px">—</span></div>
+      <div class="row"><span class="lbl">Plan</span><span id="ac-plan">—</span></div>
+      <div class="row" id="ac-until-row"><span class="lbl" id="ac-until-lbl">Valid until</span><span class="val" id="ac-until">—</span></div>
+      <button class="act hidden" id="ac-sub-btn" onclick="subscribe()">Subscribe — ₹299/month</button>
+      <div class="muted">To cancel a subscription, email rk@onamagarbathi.com from your registered email — cancellation is processed within 24 hours and access continues to the end of the paid period.</div>
+    </div>
+    <div class="card">
+      <h3>AIM parameters (<span id="ac-mkt-name">India</span>)</h3>
+      <div class="field"><label>SAFE band %</label><input id="set-safe" type="number" inputmode="decimal"></div>
+      <div class="field"><label>Minimum trigger %</label><input id="set-trigger" type="number" inputmode="decimal"></div>
+      <button class="act sec" onclick="saveSettings()">Save parameters</button>
+    </div>
+    <div class="card">
+      <div class="row"><span class="lbl">Cloud sync</span><span class="val" id="ac-sync">—</span></div>
+      <button class="act sec" onclick="cloudPull(true)">⬇ Restore from cloud</button>
+    </div>
+    <button class="act sec" onclick="logout()">Sign out</button>
+    <div class="muted" style="text-align:center;margin-top:10px">AIM Screener · educational use only · not investment advice</div>
+  </div>
+
+  </div>
+
+  <div class="tabs">
+    <button id="tab-portfolio" class="on" onclick="showPage('portfolio')"><span class="ic">▤</span>Portfolio</button>
+    <button id="tab-analysis" onclick="showPage('analysis')"><span class="ic">◈</span>Analysis</button>
+    <button id="tab-screener" onclick="showPage('screener')"><span class="ic">⌕</span>Screener</button>
+    <button id="tab-learn" onclick="showPage('learn')"><span class="ic">✎</span>Learn</button>
+    <button id="tab-account" onclick="showPage('account')"><span class="ic">◉</span>Account</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+"use strict";
+// ═════════════════ CONFIG / AUTH / GATE ═════════════════
+var CFG = null, sb = null, USER = null, PROFILE = null;
+var AUTH_MODE = "signin";
+
+function show(id){ ["v-loading","v-auth","v-paywall","v-app"].forEach(function(v){ document.getElementById(v).classList.add("hidden"); }); document.getElementById(id).classList.remove("hidden"); }
+
+function boot(){
+  fetch("/.netlify/functions/config").then(function(r){return r.json();}).then(function(cfg){
+    CFG = cfg;
+    if(!cfg.supabaseUrl || !cfg.supabaseAnonKey){
+      document.getElementById("v-loading").innerHTML = '<div class="status">⚙️ Setup in progress — accounts are not enabled yet. Please check back shortly.</div>';
+      return;
+    }
+    sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+    sb.auth.onAuthStateChange(function(evt, session){
+      if(session && session.user){ USER = session.user; afterLogin(); }
+      else { USER = null; PROFILE = null; setAuthMode("signin"); show("v-auth"); }
+    });
+  }).catch(function(){
+    document.getElementById("v-loading").innerHTML = '<div class="status">Could not load. Check your connection and refresh.</div>';
+  });
+}
+
+function setAuthMode(m){
+  AUTH_MODE = m;
+  document.getElementById("au-btn").textContent = m==="signin" ? "Sign in" : "Create account — start free trial";
+  document.getElementById("au-toggle").innerHTML = m==="signin"
+    ? 'New here? <a onclick="setAuthMode(\'signup\')">Create an account</a>'
+    : 'Already have an account? <a onclick="setAuthMode(\'signin\')">Sign in</a>';
+  document.getElementById("au-forgot").style.display = m==="signin" ? "block" : "none";
+}
+
+function authMsg(err, ok){
+  var e = document.getElementById("auth-err"), o = document.getElementById("auth-ok");
+  e.classList.toggle("hidden", !err); if(err) e.textContent = err;
+  o.classList.toggle("hidden", !ok); if(ok) o.textContent = ok;
+}
+
+function doAuth(){
+  var email = document.getElementById("au-email").value.trim();
+  var pass = document.getElementById("au-pass").value;
+  if(!email || pass.length<6){ authMsg("Enter your email and a password of at least 6 characters."); return; }
+  authMsg(null, null);
+  document.getElementById("au-btn").disabled = true;
+  var p = AUTH_MODE==="signin"
+    ? sb.auth.signInWithPassword({email:email, password:pass})
+    : sb.auth.signUp({email:email, password:pass});
+  p.then(function(res){
+    document.getElementById("au-btn").disabled = false;
+    if(res.error){ authMsg(res.error.message); return; }
+    if(AUTH_MODE==="signup" && res.data && !res.data.session){
+      authMsg(null, "Account created. Check your email for a confirmation link, then sign in.");
+      setAuthMode("signin");
+    }
+  });
+}
+
+function doReset(){
+  var email = document.getElementById("au-email").value.trim();
+  if(!email){ authMsg("Type your email above first, then tap Forgot password."); return; }
+  sb.auth.resetPasswordForEmail(email, {redirectTo: location.origin + "/app.html"}).then(function(res){
+    if(res.error) authMsg(res.error.message);
+    else authMsg(null, "Password reset link sent to " + email);
+  });
+}
+
+function logout(){ sb.auth.signOut(); }
+
+function afterLogin(){
+  show("v-loading");
+  sb.from("profiles").select("*").eq("id", USER.id).single().then(function(res){
+    PROFILE = res.data || null;
+    if(!PROFILE){ // trigger may lag a moment on first signup
+      setTimeout(afterLogin, 1200); return;
+    }
+    renderAccount();
+    if(hasAccess()){ enterApp(); } else { showPaywall(); }
+  });
+}
+
+function hasAccess(){
+  if(!PROFILE) return false;
+  if(PROFILE.status === "active"){
+    if(!PROFILE.current_period_end) return true;
+    return new Date(PROFILE.current_period_end) > new Date();
+  }
+  if(PROFILE.status === "trialing") return new Date(PROFILE.trial_ends) > new Date();
+  return false;
+}
+
+function showPaywall(){
+  document.getElementById("pw-title").textContent = PROFILE && PROFILE.status==="past_due"
+    ? "Payment issue — please re-subscribe" : "Your free trial has ended";
+  show("v-paywall");
+}
+
+// ── Razorpay checkout ──
+var RZP_LOADED = false;
+function loadRzp(cb){
+  if(RZP_LOADED){ cb(); return; }
+  var s = document.createElement("script");
+  s.src = "https://checkout.razorpay.com/v1/checkout.js";
+  s.onload = function(){ RZP_LOADED = true; cb(); };
+  document.head.appendChild(s);
+}
+
+function subscribe(){
+  var btn = document.getElementById("pw-btn"); if(btn) btn.disabled = true;
+  var errEl = document.getElementById("pw-err"); if(errEl) errEl.classList.add("hidden");
+  fetch("/.netlify/functions/billing", {
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({action:"create", user_id:USER.id, email:USER.email})
+  }).then(function(r){return r.json();}).then(function(d){
+    if(btn) btn.disabled = false;
+    if(!d.subscription_id){ pwErr(d.error || "Could not start checkout. Try again."); return; }
+    loadRzp(function(){
+      var rz = new Razorpay({
+        key: d.key_id,
+        subscription_id: d.subscription_id,
+        name: "AIM Screener",
+        description: "₹299/month subscription",
+        prefill: { email: USER.email },
+        theme: { color: "#0B3D2E" },
+        handler: function(resp){
+          fetch("/.netlify/functions/billing", {
+            method:"POST", headers:{"Content-Type":"application/json"},
+            body: JSON.stringify({
+              action:"verify", user_id:USER.id,
+              razorpay_payment_id: resp.razorpay_payment_id,
+              razorpay_subscription_id: resp.razorpay_subscription_id,
+              razorpay_signature: resp.razorpay_signature
+            })
+          }).then(function(r){return r.json();}).then(function(v){
+            if(v.ok){ PROFILE.status = "active"; PROFILE.current_period_end = v.current_period_end; renderAccount(); enterApp(); alert("✅ Subscription active. Welcome!"); }
+            else pwErr("Payment received but activation failed — email rk@onamagarbathi.com with your payment ID: " + resp.razorpay_payment_id);
+          });
+        }
+      });
+      rz.open();
+    });
+  }).catch(function(){ if(btn) btn.disabled=false; pwErr("Network error. Try again."); });
+}
+function pwErr(msg){ var e=document.getElementById("pw-err"); if(e){ e.textContent=msg; e.classList.remove("hidden"); } else alert(msg); }
+
+// ═════════════════ APP STATE ═════════════════
+var MARKET = localStorage.getItem("aim_market") || "india";
+var S = null;               // active market state
+var SYNC_TIMER = null;
+
+function skey(){ return "aim_state_" + MARKET; }
+function defaults(){ return {holdings:[], cash:0, prices:{}, settings:{safe:10, trigger:5}, updated:0}; }
+function load(){ try{ return JSON.parse(localStorage.getItem(skey())) || defaults(); }catch(e){ return defaults(); } }
+function save(st, skipCloud){
+  st.updated = Date.now();
+  localStorage.setItem(skey(), JSON.stringify(st));   // local-first, always
+  if(!skipCloud){
+    clearTimeout(SYNC_TIMER);
+    SYNC_TIMER = setTimeout(cloudPush, 1500);          // debounced background sync
+  }
+}
+function cloudPush(){
+  if(!USER || !sb) return;
+  sb.from("portfolios").upsert({user_id:USER.id, market:MARKET, data:S, updated_at:new Date().toISOString()})
+    .then(function(res){ setSync(res.error ? "⚠️ sync failed" : "✅ synced " + new Date().toLocaleTimeString("en-IN")); });
+}
+function cloudPull(force){
+  if(!USER || !sb) return;
+  sb.from("portfolios").select("data").eq("user_id",USER.id).eq("market",MARKET).maybeSingle().then(function(res){
+    var cloud = res.data && res.data.data;
+    if(cloud && (force || (cloud.updated||0) > (S.updated||0))){
+      S = cloud; save(S, true); renderHoldings(); loadSettingsUI();
+      setSync("✅ restored from cloud");
+    } else if(force){ setSync("cloud has no newer data"); }
+  });
+}
+function setSync(t){ var el=document.getElementById("ac-sync"); if(el) el.textContent=t; }
+
+// ═════════════════ MARKET / FORMAT / QUOTES ═════════════════
+var UNIVERSE = {
+  india: ["RELIANCE","TCS","HDFCBANK","ICICIBANK","INFY","ITC","SBIN","BHARTIARTL","LT","HCLTECH",
+  "BAJFINANCE","ASIANPAINT","TITAN","SUNPHARMA","TATAMOTORS","NTPC","ONGC","MARUTI","POWERGRID","COALINDIA",
+  "CIPLA","GRASIM","JSWSTEEL","BPCL","TATASTEEL","TECHM","WIPRO","HEROMOTOCO","DRREDDY","BRITANNIA",
+  "EICHERMOT","SBILIFE","HINDALCO","TATACONSUM","APOLLOHOSP","ADANIPORTS","TATAPOWER","IOC","VEDL","PIDILITIND",
+  "GODREJCP","DABUR","SIEMENS","BEL","IRCTC","PNB","GAIL","BANKBARODA","CANBK","INDIGO",
+  "LUPIN","AUROPHARMA","TVSMOTOR","SRF","BIOCON","ACC","VOLTAS","MUTHOOTFIN","ABB","DLF",
+  "PFC","RECLTD","SAIL","FEDERALBNK","ASHOKLEY","BHARATFORG","ESCORTS","EXIDEIND","HAVELLS"],
+  usa: ["AAPL","MSFT","GOOGL","AMZN","NVDA","META","TSLA","BRK-B","JPM","V",
+  "MA","UNH","HD","PG","XOM","CVX","JNJ","LLY","ABBV","MRK",
+  "PEP","KO","COST","WMT","BAC","DIS","CSCO","ADBE","CRM","NFLX",
+  "INTC","AMD","QCOM","TXN","ORCL","IBM","GE","CAT","BA","HON",
+  "UPS","RTX","LMT","NKE","MCD","SBUX","LOW","TGT","PFE","TMO",
+  "ABT","DHR","BMY","AMGN","GILD","CVS","MDT","UNP","CSX","FDX",
+  "GS","MS","C","WFC","SCHW","BLK","AXP","PYPL","UBER","ABNB",
+  "AVGO","MU","AMAT","LRCX","ADI","NOW","INTU","PANW","PLTR","SHOP"]
+};
+function ysym(sym){ return MARKET==="india" ? sym + ".NS" : sym; }
+function money(n){
+  if(MARKET==="india") return "₹" + Math.round(n).toLocaleString("en-IN");
+  return "$" + n.toLocaleString("en-US",{maximumFractionDigits:2});
+}
+function pctf(n){ return (n>=0?"+":"") + n.toFixed(1) + "%"; }
+
+function fetchQuote(sym){
+  return fetch("/.netlify/functions/yahoo?action=quote&symbol=" + encodeURIComponent(ysym(sym)))
+    .then(function(r){return r.json();}).then(function(d){
+      var res = d.chart && d.chart.result && d.chart.result[0];
+      return res && res.meta ? res.meta.regularMarketPrice : null;
+    }).catch(function(){ return null; });
+}
+function fetchHistory(sym, range){
+  return fetch("/.netlify/functions/yahoo?action=history&symbol=" + encodeURIComponent(ysym(sym)) + "&range=" + range)
+    .then(function(r){return r.json();}).then(function(d){
+      var res = d.chart && d.chart.result && d.chart.result[0];
+      if(!res || !res.indicators) return null;
+      var closes = res.indicators.quote[0].close || [];
+      var out = [];
+      for(var i=0;i<closes.length;i++){ if(closes[i]!=null) out.push({close:closes[i]}); }
+      return out.length>10 ? out : null;
+    }).catch(function(){ return null; });
+}
+
+// ═════════════════ NAVIGATION ═════════════════
+function setMarket(m){
+  MARKET = m; localStorage.setItem("aim_market", m);
+  document.getElementById("mkt-india").classList.toggle("on", m==="india");
+  document.getElementById("mkt-usa").classList.toggle("on", m==="usa");
+  document.getElementById("sym-hint").textContent = m==="india" ? "(NSE)" : "(US ticker)";
+  document.getElementById("ac-mkt-name").textContent = m==="india" ? "India" : "USA";
+  document.getElementById("scr-count").textContent = UNIVERSE[m].length;
+  S = load();
+  renderHoldings(); loadSettingsUI();
+  document.getElementById("analysis-list").innerHTML = "";
+  document.getElementById("screener-results").innerHTML = "";
+  cloudPull(false);
+}
+function showPage(p){
+  ["portfolio","analysis","screener","learn","account"].forEach(function(x){
+    document.getElementById("pg-"+x).classList.toggle("hidden", x!==p);
+    document.getElementById("tab-"+x).classList.toggle("on", x===p);
+  });
+  window.scrollTo(0,0);
+}
+function enterApp(){ show("v-app"); setMarket(MARKET); }
+
+// ═════════════════ PORTFOLIO ═════════════════
+function renderHoldings(){
+  var el = document.getElementById("holdings-list");
+  if(S.holdings.length===0){ el.innerHTML = '<div class="status">No holdings yet. Add your first stock below to begin.</div>'; updateTotals(); return; }
+  var html = "";
+  S.holdings.forEach(function(h, i){
+    var ltp = S.prices[h.sym] || 0;
+    var v = ltp*h.qty, c = h.avg*h.qty;
+    var pnl = v-c, pnlPct = c>0 ? pnl/c*100 : 0;
+    html += '<div class="card">'
+      + '<div class="row"><strong>' + h.sym + '</strong><button class="del" onclick="delHolding(' + i + ')">✕</button></div>'
+      + '<div class="row"><span class="lbl">' + h.qty + ' @ ' + money(h.avg) + '</span><span class="val">' + (ltp? money(ltp):"—") + '</span></div>'
+      + (ltp ? '<div class="row"><span class="lbl">Value</span><span class="val">' + money(v) + '</span></div>'
+        + '<div class="row"><span class="lbl">P&L</span><span class="val ' + (pnl>=0?"green":"red") + '">' + money(pnl) + ' (' + pctf(pnlPct) + ')</span></div>' : '')
+      + '</div>';
+  });
+  el.innerHTML = html;
+  updateTotals();
+}
+function updateTotals(){
+  var v=0, c=0;
+  S.holdings.forEach(function(h){ var ltp=S.prices[h.sym]||0; v+=ltp*h.qty; c+=h.avg*h.qty; });
+  document.getElementById("pf-value").textContent = money(v);
+  document.getElementById("pf-invested").textContent = money(c);
+  var pnl = v-c;
+  var pe = document.getElementById("pf-pnl");
+  pe.textContent = money(pnl) + (c>0 ? " (" + pctf(pnl/c*100) + ")" : "");
+  pe.className = "val " + (pnl>=0?"green":"red");
+  document.getElementById("pf-cash").textContent = money(S.cash||0);
+  document.getElementById("cash-input").value = S.cash||"";
+}
+function addHolding(){
+  var sym = document.getElementById("add-sym").value.trim().toUpperCase();
+  var qty = parseFloat(document.getElementById("add-qty").value);
+  var avg = parseFloat(document.getElementById("add-avg").value);
+  if(!sym || !(qty>0) || !(avg>0)){ alert("Fill symbol, quantity and average price."); return; }
+  var existing = null;
+  S.holdings.forEach(function(h){ if(h.sym===sym) existing=h; });
+  if(existing){
+    var totalQty = existing.qty + qty;
+    existing.avg = (existing.avg*existing.qty + avg*qty)/totalQty;
+    existing.qty = totalQty;
+    existing.pc = (existing.pc||0) + avg*qty;
+  } else {
+    S.holdings.push({sym:sym, qty:qty, avg:avg, pc:avg*qty});
+  }
+  save(S); renderHoldings();
+  document.getElementById("add-sym").value=""; document.getElementById("add-qty").value=""; document.getElementById("add-avg").value="";
+  fetchQuote(sym).then(function(p){ if(p){ S.prices[sym]=p; save(S); renderHoldings(); } });
+}
+function delHolding(i){
+  if(!confirm("Remove " + S.holdings[i].sym + " from your portfolio?")) return;
+  S.holdings.splice(i,1); save(S); renderHoldings();
+}
+function saveCash(){
+  S.cash = parseFloat(document.getElementById("cash-input").value)||0;
+  save(S); updateTotals(); alert("Cash reserve saved: " + money(S.cash));
+}
+function refreshPrices(){
+  var st = document.getElementById("pf-status");
+  var list = S.holdings.filter(function(h){return h.qty>0;});
+  if(list.length===0) return;
+  st.textContent = " fetching…";
+  var done=0;
+  list.forEach(function(h){
+    fetchQuote(h.sym).then(function(p){
+      if(p) S.prices[h.sym]=p;
+      done++;
+      if(done===list.length){ save(S); renderHoldings(); st.textContent = " ✅ " + new Date().toLocaleTimeString("en-IN"); }
+    });
+  });
+}
+
+// ═════════════════ AIM ENGINE (Lichello + corrections) ═════════════════
+function aimSignal(h, ltp, safePct, trigPct){
+  if(!ltp || h.qty<=0) return {action:"HOLD", reason:"No price or quantity available", amount:0, shares:0};
+  var stockValue = ltp * h.qty;
+  var pc = h.pc && h.pc>0 ? h.pc : h.avg*h.qty;
+  var advice = pc - stockValue;
+  var safe = stockValue * (safePct/100);
+  var trigger = stockValue * (trigPct/100);
+  if(Math.abs(advice) <= Math.max(safe, trigger))
+    return {action:"HOLD", reason:"Value is within the SAFE band of control — the model computes no move", amount:0, shares:0, pc:pc};
+  if(advice > 0){
+    var buyAmt = advice - safe;
+    if(buyAmt > S.cash) buyAmt = S.cash;
+    if(buyAmt < trigger) return {action:"HOLD", reason:"Computed accumulation is below trigger, or cash pool is low", amount:0, shares:0, pc:pc};
+    var shares = Math.floor(buyAmt/ltp);
+    if(shares<1) return {action:"HOLD", reason:"Computed amount is less than 1 share", amount:0, shares:0, pc:pc};
+    return {action:"ACCUMULATE", reason:"Market value is below portfolio control by more than the SAFE band", amount:shares*ltp, shares:shares, pc:pc};
+  } else {
+    if(ltp <= h.avg) return {action:"HOLD", reason:"Reduction blocked: price is at or below your average cost " + money(h.avg), amount:0, shares:0, pc:pc};
+    var sellAmt = (-advice) - safe;
+    if(sellAmt < trigger) return {action:"HOLD", reason:"Computed reduction is below the trigger threshold", amount:0, shares:0, pc:pc};
+    var sh = Math.floor(sellAmt/ltp);
+    if(sh<1) return {action:"HOLD", reason:"Computed amount is less than 1 share", amount:0, shares:0, pc:pc};
+    if(sh>h.qty) sh = h.qty;
+    return {action:"REDUCE", reason:"Market value is above portfolio control by more than the SAFE band", amount:sh*ltp, shares:sh, pc:pc};
+  }
+}
+
+function runAnalysis(){
+  var el = document.getElementById("analysis-list");
+  var pending = S.holdings.filter(function(h){return h.qty>0;});
+  if(pending.length===0){ el.innerHTML='<div class="status">Add holdings in the Portfolio tab first.</div>'; return; }
+  el.innerHTML = '<div class="status">📡 Fetching live prices and running the formula…</div>';
+  var safePct = S.settings.safe||10, trigPct = S.settings.trigger||5;
+  var html = "", done=0;
+  pending.forEach(function(h){
+    fetchQuote(h.sym).then(function(ltp){
+      if(ltp) S.prices[h.sym]=ltp;
+      var sig = aimSignal(h, ltp, safePct, trigPct);
+      var cls = sig.action==="ACCUMULATE"?"buy":(sig.action==="REDUCE"?"sell":"hold");
+      html += '<div class="card">'
+        + '<div class="row"><strong>' + h.sym + '</strong><span class="sig ' + cls + '">' + sig.action + '</span></div>'
+        + '<div class="row"><span class="lbl">Live price</span><span class="val">' + (ltp? money(ltp):"—") + '</span></div>'
+        + '<div class="row"><span class="lbl">Holding</span><span class="val">' + h.qty + ' @ ' + money(h.avg) + '</span></div>'
+        + '<div class="row"><span class="lbl">Portfolio control</span><span class="val blue">' + money(sig.pc||h.avg*h.qty) + '</span></div>'
+        + (sig.shares>0 ? '<div class="row"><span class="lbl">Model computes</span><span class="val gold">' + sig.shares + ' shares ≈ ' + money(sig.amount) + '</span></div>' : '')
+        + '<div class="muted">' + sig.reason + '</div>'
+        + '</div>';
+      done++;
+      if(done===pending.length){
+        save(S);
+        el.innerHTML = html + '<div class="disc">These are mechanical outputs of the AIM formula for study — not investment advice or recommendations. Verify prices with your broker and make your own decisions. If you act on your own judgment, remember to update quantities and cash here so future calculations stay accurate.</div>';
+      }
+    });
+  });
+}
+
+// ═════════════════ BACKTEST ═════════════════
+function runBacktest(){
+  var sym = document.getElementById("bt-sym").value.trim().toUpperCase();
+  var amount = parseFloat(document.getElementById("bt-amt").value)||100000;
+  var el = document.getElementById("bt-result");
+  if(!sym){ alert("Enter a symbol to backtest."); return; }
+  el.innerHTML = '<div class="status">📡 Fetching 2 years of history…</div>';
+  fetchHistory(sym, "2y").then(function(data){
+    if(!data || data.length<100){ el.innerHTML='<div class="status">Not enough history for ' + sym + '. Check the symbol.</div>'; return; }
+    var closes = data.map(function(x){return x.close;});
+    var startPrice = closes[0], endPrice = closes[closes.length-1];
+    // Buy & Hold
+    var bhShares = Math.floor((amount/2)/startPrice)*2; // approx full deploy
+    bhShares = Math.floor(amount/startPrice);
+    var bhFinal = bhShares*endPrice + (amount - bhShares*startPrice);
+    // AIM: half stock, half cash, monthly checks
+    var shares = Math.floor((amount/2)/startPrice);
+    var cash = amount - shares*startPrice;
+    var pc = shares*startPrice;
+    var safePct = S.settings.safe||10, trigPct = S.settings.trigger||5;
+    var trades = 0;
+    for(var i=21;i<closes.length;i+=21){
+      var price = closes[i];
+      var sv = shares*price;
+      var advice = pc - sv;
+      var safe = sv*safePct/100, trig = sv*trigPct/100;
+      if(Math.abs(advice) <= Math.max(safe,trig)) continue;
+      if(advice>0){
+        var buyAmt = Math.min(advice-safe, cash);
+        var sh = Math.floor(buyAmt/price);
+        if(sh>=1 && buyAmt>=trig){ shares+=sh; cash-=sh*price; pc+=sh*price/2; trades++; }
+      } else {
+        var sellAmt = (-advice)-safe;
+        var sh2 = Math.min(Math.floor(sellAmt/price), shares);
+        if(sh2>=1 && sellAmt>=trig){ shares-=sh2; cash+=sh2*price; pc-=sh2*price/2; trades++; }
+      }
+    }
+    var aimFinal = shares*endPrice + cash;
+    var aimRet = (aimFinal-amount)/amount*100;
+    var bhRet = (bhFinal-amount)/amount*100;
+    var winner = aimFinal>=bhFinal ? "AIM" : "Buy & Hold";
+    el.innerHTML = '<div class="card">'
+      + '<div class="row"><span class="lbl">Stock</span><span class="val">' + sym + '</span></div>'
+      + '<div class="row"><span class="lbl">AIM final value</span><span class="val ' + (aimRet>=0?"green":"red") + '">' + money(aimFinal) + ' (' + pctf(aimRet) + ')</span></div>'
+      + '<div class="row"><span class="lbl">Buy & Hold final</span><span class="val ' + (bhRet>=0?"green":"red") + '">' + money(bhFinal) + ' (' + pctf(bhRet) + ')</span></div>'
+      + '<div class="row"><span class="lbl">Rebalances</span><span class="val">' + trades + '</span></div>'
+      + '<div class="row"><span class="lbl">Better here</span><span class="val gold">' + winner + '</span></div>'
+      + '<div class="muted">Monthly-check simulation over ~2 years, half stock / half cash start. AIM works best on volatile sideways stocks; in strong uptrends buy-and-hold usually wins. Past performance does not guarantee future results.</div>'
+      + '</div>';
+  });
+}
+
+// ═════════════════ SCREENER ═════════════════
+var SCR_CANCEL = false, SCR_RESULTS = [];
+function runScreener(){
+  SCR_CANCEL = false;
+  var el = document.getElementById("screener-results");
+  var symbols = UNIVERSE[MARKET];
+  var results = [], done = 0, failed = 0, total = symbols.length;
+  el.innerHTML = '<div class="status">📡 Scanning ' + total + ' stocks — keep this tab open…</div>';
+
+  function processBatch(start){
+    if(SCR_CANCEL){ finish(true); return; }
+    var batch = symbols.slice(start, start+10);
+    if(batch.length===0){ finish(false); return; }
+    var bd = 0;
+    batch.forEach(function(sym){
+      fetchHistory(sym, "1y").then(function(data){
+        if(data && data.length>50){
+          var closes = data.map(function(x){return x.close;});
+          var hi = Math.max.apply(null, closes), lo = Math.min.apply(null, closes);
+          var ltp = closes[closes.length-1];
+          var posPct = (hi>lo)? (ltp-lo)/(hi-lo)*100 : 50;
+          var vol = 0;
+          for(var i=1;i<closes.length;i++){ vol += Math.abs(closes[i]-closes[i-1])/closes[i-1]; }
+          vol = vol/closes.length*100;
+          var score = (100-posPct)*0.6 + vol*40*0.4;
+          results.push({sym:sym, ltp:ltp, posPct:posPct, vol:vol, score:score});
+        } else failed++;
+        bd++; done++;
+        if(done % 20 === 0) el.innerHTML = '<div class="status">📡 Scanned ' + done + '/' + total + ' · ' + results.length + ' valid…</div>';
+        if(bd===batch.length) setTimeout(function(){ processBatch(start+10); }, 300);
+      });
+    });
+  }
+  function finish(cancelled){
+    var clean = results.filter(function(r){ return r.ltp>=1 && r.vol>=0.5 && r.vol<=8; });
+    clean.sort(function(a,b){ return b.score-a.score; });
+    SCR_RESULTS = clean;
+    var html = '<div class="card"><h3>' + (cancelled?"⏹ Partial · ":"") + 'AIM candidates — ranked (' + clean.length + ')</h3>'
+      + '<table><tr><th>#</th><th>STOCK</th><th>PRICE</th><th>VS 52WK</th><th>VOL</th><th>SCORE</th></tr>';
+    clean.slice(0,100).forEach(function(r,i){
+      var posCls = r.posPct<40 ? "green" : (r.posPct>70 ? "red":"");
+      html += '<tr><td>' + (i+1) + '</td><td><strong>' + r.sym + '</strong></td><td class="mono">' + money(r.ltp) + '</td>'
+        + '<td class="' + posCls + ' mono">' + Math.round(r.posPct) + '%</td><td class="mono">' + r.vol.toFixed(1) + '</td>'
+        + '<td class="mono"><strong>' + Math.round(r.score) + '</strong></td></tr>';
+    });
+    html += '</table><div class="disc">Ranked by AIM-fit score: low in the 52-week range plus healthy volatility. A study list for further research — not a recommendation to buy anything. Backtest before investing.</div></div>';
+    el.innerHTML = html;
+  }
+  processBatch(0);
+}
+
+// ═════════════════ SETTINGS / ACCOUNT ═════════════════
+function loadSettingsUI(){
+  document.getElementById("set-safe").value = S.settings.safe||10;
+  document.getElementById("set-trigger").value = S.settings.trigger||5;
+}
+function saveSettings(){
+  S.settings.safe = parseFloat(document.getElementById("set-safe").value)||10;
+  S.settings.trigger = parseFloat(document.getElementById("set-trigger").value)||5;
+  save(S); alert("Parameters saved for " + (MARKET==="india"?"India":"USA") + ".");
+}
+function renderAccount(){
+  document.getElementById("ac-email").textContent = USER.email;
+  var plan = document.getElementById("ac-plan");
+  var untilLbl = document.getElementById("ac-until-lbl");
+  var until = document.getElementById("ac-until");
+  var subBtn = document.getElementById("ac-sub-btn");
+  if(PROFILE.status==="active"){
+    plan.innerHTML = '<span class="pill ok">ACTIVE · ₹299/mo</span>';
+    untilLbl.textContent = "Renews / valid until";
+    until.textContent = PROFILE.current_period_end ? new Date(PROFILE.current_period_end).toLocaleDateString("en-IN") : "—";
+    subBtn.classList.add("hidden");
+  } else if(PROFILE.status==="trialing" && new Date(PROFILE.trial_ends) > new Date()){
+    var days = Math.ceil((new Date(PROFILE.trial_ends) - new Date())/86400000);
+    plan.innerHTML = '<span class="pill tr">FREE TRIAL · ' + days + ' day' + (days===1?"":"s") + ' left</span>';
+    untilLbl.textContent = "Trial ends";
+    until.textContent = new Date(PROFILE.trial_ends).toLocaleDateString("en-IN");
+    subBtn.classList.remove("hidden");
+  } else {
+    plan.innerHTML = '<span class="pill bad">' + (PROFILE.status==="past_due"?"PAYMENT DUE":"EXPIRED") + '</span>';
+    untilLbl.textContent = "Status since";
+    until.textContent = "—";
+    subBtn.classList.remove("hidden");
+  }
+}
+
+// ═════════════════ INIT ═════════════════
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js");
+boot();
+</script>
+</body>
+</html>

@@ -682,8 +682,14 @@ function runScreener(){
           var vol = 0;
           for(var i=1;i<closes.length;i++){ vol += Math.abs(closes[i]-closes[i-1])/closes[i-1]; }
           vol = vol/closes.length*100;
-          var score = (100-posPct)*0.6 + vol*40*0.4;
-          results.push({sym:sym, ltp:ltp, posPct:posPct, vol:vol, score:score});
+          var yrRet = (ltp - closes[0]) / closes[0] * 100;
+          // v2 scoring: sweet spot 10-40% of 52wk range; near-floor = crash risk
+          var posScore;
+          if(posPct <= 10) posScore = posPct * 10;
+          else if(posPct <= 40) posScore = 100;
+          else posScore = Math.max(0, 100 - (posPct - 40) * 1.67);
+          var score = posScore*0.6 + vol*40*0.4;
+          results.push({sym:sym, ltp:ltp, posPct:posPct, vol:vol, yrRet:yrRet, score:score});
         } else failed++;
         bd++; done++;
         if(done % 20 === 0) el.innerHTML = '<div class="status">📡 Scanned ' + done + '/' + total + ' · ' + results.length + ' valid…</div>';
@@ -692,18 +698,18 @@ function runScreener(){
     });
   }
   function finish(cancelled){
-    var clean = results.filter(function(r){ return r.ltp>=1 && r.vol>=0.5 && r.vol<=8; });
+    var clean = results.filter(function(r){ return r.ltp>=1 && r.vol>=0.5 && r.vol<=8 && r.posPct>=5 && r.yrRet>-40; });
     clean.sort(function(a,b){ return b.score-a.score; });
     SCR_RESULTS = clean;
     var html = '<div class="card"><h3>' + (cancelled?"⏹ Partial · ":"") + 'AIM candidates — ranked (' + clean.length + ')</h3>'
-      + '<table><tr><th>#</th><th>STOCK</th><th>PRICE</th><th>VS 52WK</th><th>VOL</th><th>SCORE</th></tr>';
+      + '<table><tr><th>#</th><th>STOCK</th><th>PRICE</th><th>VS 52WK</th><th>1Y</th><th>VOL</th><th>SCORE</th></tr>';
     clean.slice(0,100).forEach(function(r,i){
       var posCls = r.posPct<40 ? "green" : (r.posPct>70 ? "red":"");
       html += '<tr><td>' + (i+1) + '</td><td><strong>' + r.sym + '</strong></td><td class="mono">' + money(r.ltp) + '</td>'
-        + '<td class="' + posCls + ' mono">' + Math.round(r.posPct) + '%</td><td class="mono">' + r.vol.toFixed(1) + '</td>'
+        + '<td class="' + posCls + ' mono">' + Math.round(r.posPct) + '%</td><td class="' + (r.yrRet>=0?'green':'red') + ' mono">' + Math.round(r.yrRet) + '%</td><td class="mono">' + r.vol.toFixed(1) + '</td>'
         + '<td class="mono"><strong>' + Math.round(r.score) + '</strong></td></tr>';
     });
-    html += '</table><div class="disc">Ranked by AIM-fit score: low in the 52-week range plus healthy volatility. A study list for further research — not a recommendation to buy anything. Backtest before investing.</div></div>';
+    html += '</table><div class="disc">Ranked by AIM-fit score v2: the sweet spot is 10–40% of the 52-week range with healthy volatility. Stocks that crashed more than 40% in a year, or sit at the very floor of their range, are excluded — the very bottom usually means the fall is still in progress, not a bargain. A study list for further research — not a recommendation to buy anything. Backtest before investing.</div></div>';
     el.innerHTML = html;
   }
   processBatch(0);
